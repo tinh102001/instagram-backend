@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
       default:
         "https://res.cloudinary.com/ductinh/image/upload/v1676095073/instagram/avatar_cugq40_q61cra.png",
     },
-    role: { type: String, default: "user" },
+    role: { type: String, default: "Users" },
     gender: { type: String, default: "male" },
     mobile: { type: String, default: "" },
     address: { type: String, default: "" },
@@ -40,9 +40,9 @@ const userSchema = new mongoose.Schema(
       maxlength: 200,
     },
     website: { type: String, default: "" },
-    followers: [{ type: mongoose.Types.ObjectId, ref: "user" }],
-    following: [{ type: mongoose.Types.ObjectId, ref: "user" }],
-    saved: [{ type: mongoose.Types.ObjectId, ref: "user" }],
+    followers: [{ type: mongoose.Types.ObjectId, ref: "Users" }],
+    following: [{ type: mongoose.Types.ObjectId, ref: "Users" }],
+    saved: [{ type: mongoose.Types.ObjectId, ref: "Users" }],
   },
   {
     timestamps: true,
