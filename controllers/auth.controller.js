@@ -44,6 +44,10 @@ export const authCtrl = {
       res.json({
         msg: "Đăng kí thành công!",
         accessToken,
+        user: {
+          ...user._doc,
+          password: "",
+        },
       });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -74,6 +78,10 @@ export const authCtrl = {
       res.json({
         msg: "Đăng nhập thành công!",
         accessToken,
+        user: {
+          ...user._doc,
+          password: "",
+        },
       });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -90,7 +98,8 @@ export const authCtrl = {
   generateAccessToken: async (req, res) => {
     try {
       const refreshToken = req.cookies.refreshtoken;
-      if (!refreshToken) return res.status(400).json({ msg: "Xin hãy đăng nhập." });
+      if (!refreshToken)
+        return res.status(400).json({ msg: "Xin hãy đăng nhập." });
 
       jwt.verify(
         refreshToken,
@@ -107,6 +116,7 @@ export const authCtrl = {
 
           res.json({
             accessToken,
+            user,
           });
         }
       );
@@ -118,12 +128,12 @@ export const authCtrl = {
 
 const createAccessToken = (payload) => {
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "20m",
+    expiresIn: "7d",
   });
 };
 
 const createRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "20m",
+    expiresIn: "7d",
   });
 };
