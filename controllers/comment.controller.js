@@ -36,8 +36,34 @@ export const commentCtrl = {
         return res.status(500).json({msg: err.message})
     }
   },
-  likeComment: async (req, res) => {},
-  unLikeComment: async (req, res) => {},
+  likeComment: async (req, res) => {
+    try {
+      const comment = await Comments.find({_id: req.params.id, likes: req.user._id})
+      if(comment.length > 0) return res.status(400).json({msg: "Bạn đã thích bình luận này rồi"})
+
+      await Comments.findOneAndUpdate({_id: req.params.id}, {
+          $push: {likes: req.user._id}
+      }, {new: true})
+
+      res.json({msg: 'Đã thích bình luận'})
+
+    } catch (err) {
+        return res.status(500).json({msg: err.message})
+    }
+  },
+  unLikeComment: async (req, res) => {
+    try {
+
+      await Comments.findOneAndUpdate({_id: req.params.id}, {
+          $pull: {likes: req.user._id}
+      }, {new: true})
+
+      res.json({msg: 'Đã bỏ thích bình luận'})
+
+    } catch (err) {
+        return res.status(500).json({msg: err.message})
+    }
+  },
   deleteComment: async (req, res) => {
     try {
       const comment = await Comments.findOneAndDelete({
