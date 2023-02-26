@@ -45,7 +45,7 @@ export const authCtrl = {
         msg: "Đăng kí thành công!",
         accessToken,
         user: {
-          ...user._doc,
+          ...newUser._doc,
           password: "",
         },
       });
