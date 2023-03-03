@@ -94,7 +94,7 @@ export const postCtrl = {
   getUserPosts: async (req, res) => {
     try {
       const page = req.query.page * 1 || 1;
-      const skip = (page - 1) * DEFAULT_LIMIT;
+      const skip = (page - 1) * DEFAULT_LIMIT_POST;
       const posts = await Posts.find({ user: req.params.id })
         .skip(skip)
         .limit(DEFAULT_LIMIT_POST)
