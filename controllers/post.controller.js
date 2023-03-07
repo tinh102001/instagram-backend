@@ -77,14 +77,23 @@ export const postCtrl = {
   },
   getPosts: async (req, res) => {
     try {
-      const page = req.query.page ? Number(req.query.page) : 0;
+      const page = req.query.page * 1 || 1;
+      const skip = (page - 1) * DEFAULT_LIMIT_POST;
 
       const posts = await Posts.find({
         user: [...req.user.following, req.user._id],
       })
-        .skip(page)
+        .skip(skip)
         .limit(DEFAULT_LIMIT_POST)
-        .sort("-updatedAt");
+        .sort("-updatedAt")
+        .populate("user likes", "avatar username fullname followers")
+        .populate({
+          path: "comments",
+          populate: {
+            path: "user likes",
+            select: "-password",
+          },
+        });
 
       return res.json({ posts });
     } catch (err) {
@@ -95,6 +104,7 @@ export const postCtrl = {
     try {
       const page = req.query.page * 1 || 1;
       const skip = (page - 1) * DEFAULT_LIMIT_POST;
+      
       const posts = await Posts.find({ user: req.params.id })
         .skip(skip)
         .limit(DEFAULT_LIMIT_POST)
