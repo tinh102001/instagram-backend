@@ -1,20 +1,16 @@
-import { Posts } from "../models/post.model.js";
-import { Users } from "../models/user.model.js";
-import { Comments } from "../models/comment.model.js";
-
 import { postServices } from "../services/post.service.js";
 
 const DEFAULT_LIMIT_POST = 6;
 
 export const postController = {
-  createPost: (req, res) => {
+  createPost: async (req, res) => {
     try {
       const { content, images } = req.body;
 
       if (images.length === 0)
         return res.status(400).json({ msg: "Hãy thêm ảnh kèm theo." });
 
-      const newPost = postServices.create(content, images, req.user._id);
+      const newPost = await postServices.create(content, images, req.user._id);
 
       res.json({
         msg: "Đã tạo bài viết",
@@ -27,20 +23,15 @@ export const postController = {
       return res.status(500).json({ msg: err.message });
     }
   },
-  updatePost: (req, res) => {
+  updatePost: async (req, res) => {
     try {
       const { content, images } = req.body;
 
-      // const updatePost = await Posts.findOneAndUpdate(
-      //   { _id: req.params.id },
-      //   {
-      //     content,
-      //     images,
-      //   }
-      // )
-      //   .populate("user")
-      //   .populate("comments");
-      const updatePost = postServices.update(content, images, req.params.id);
+      const updatePost = await postServices.update(
+        content,
+        images,
+        req.params.id
+      );
 
       res.json({
         msg: "Đã cập nhật bài viết",
@@ -54,14 +45,9 @@ export const postController = {
       return res.status(500).json({ msg: err.message });
     }
   },
-  deletePost: (req, res) => {
+  deletePost: async (req, res) => {
     try {
-      // const deletePost = await Posts.findOneAndDelete({
-      //   _id: req.params.id,
-      //   user: req.user._id,
-      // });
-      // await Comments.deleteMany({ _id: { $in: post.comments } });
-      const deletePost = postServices.delete(req.params.id, req.user._id);
+      const deletePost = await postServices.delete(req.params.id, req.user._id);
       res.json({
         msg: "Đã xoá bài viết",
         deletePost: {
@@ -78,21 +64,12 @@ export const postController = {
       const page = req.query.page * 1 || 1;
       const skip = (page - 1) * DEFAULT_LIMIT_POST;
 
-      const posts = await Posts.find({
-        user: [...req.user.following, req.user._id],
-      })
-        .skip(skip)
-        .limit(DEFAULT_LIMIT_POST)
-        .sort("-updatedAt")
-        .populate("user likes", "avatar username fullname followers")
-        .populate({
-          path: "comments",
-          populate: {
-            path: "user likes",
-            select: "-password",
-          },
-        });
-
+      const posts = await postServices.posts(
+        req.user.following,
+        req.user._id,
+        skip,
+        DEFAULT_LIMIT_POST
+      );
       return res.json({ posts });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -103,11 +80,11 @@ export const postController = {
       const page = req.query.page * 1 || 1;
       const skip = (page - 1) * DEFAULT_LIMIT_POST;
 
-      const posts = await Posts.find({ user: req.params.id })
-        .skip(skip)
-        .limit(DEFAULT_LIMIT_POST)
-        .sort("-createdAt");
-
+      const posts = await postServices.userPosts(
+        req.params.id,
+        skip,
+        DEFAULT_LIMIT_POST
+      );
       res.json({
         posts,
         result: posts.length,
@@ -118,16 +95,7 @@ export const postController = {
   },
   getPost: async (req, res) => {
     try {
-      const post = await Posts.findById(req.params.id)
-        .populate("user likes", "avatar username fullname followers")
-        .populate({
-          path: "comments",
-          populate: {
-            path: "user likes",
-            select: "-password",
-          },
-        });
-
+      const post = await postServices.post(req.params.id);
       if (!post)
         return res.status(400).json({ msg: "This post does not exist." });
 
@@ -141,13 +109,9 @@ export const postController = {
   getExplorePosts: async (req, res) => {
     try {
       const newArr = [...req.user.following, req.user._id];
-
       const num = req.query.num || 9;
 
-      const posts = await Posts.aggregate([
-        { $match: { user: { $nin: newArr } } },
-        { $sample: { size: Number(num) } },
-      ]);
+      const posts = await postServices.explorePosts(newArr, num);
 
       return res.json({
         msg: "Success!",
@@ -160,20 +124,10 @@ export const postController = {
   },
   likePost: async (req, res) => {
     try {
-      const post = await Posts.find({
-        _id: req.params.id,
-        likes: req.user._id,
-      });
+      const [post, like] = await postServices.like(req.params.id, req.user._id);
+
       if (post.length > 0)
         return res.status(400).json({ msg: "Bạn đã thích bài viết này." });
-
-      const like = await Posts.findOneAndUpdate(
-        { _id: req.params.id },
-        {
-          $push: { likes: req.user._id },
-        },
-        { new: true }
-      );
 
       if (!like)
         return res.status(400).json({ msg: "Bài viết không tồn tại." });
@@ -185,13 +139,7 @@ export const postController = {
   },
   unLikePost: async (req, res) => {
     try {
-      const like = await Posts.findOneAndUpdate(
-        { _id: req.params.id },
-        {
-          $pull: { likes: req.user._id },
-        },
-        { new: true }
-      );
+      const like = await postServices.unlike(req.params.id, req.user._id);
 
       if (!like)
         return res.status(400).json({ msg: "Bài viết không tồn tại." });
@@ -201,9 +149,19 @@ export const postController = {
       return res.status(500).json({ msg: err.message });
     }
   },
-  savePost: (req, res) => {
+  savePost: async (req, res) => {
     try {
-      postServices.saved(req.user._id, req.params.id);
+      const [user, save] = await postServices.saved(
+        req.user._id,
+        req.params.id
+      );
+
+      if (user.length > 0)
+        return res.status(400).json({ msg: "Bạn đã lưu bài viết." });
+
+      if (!save)
+        return res.status(400).json({ msg: "Người dùng không tồn tại." });
+
       res.json({ msg: "Lưu bài viết thành công!" });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -211,7 +169,11 @@ export const postController = {
   },
   unSavePost: async (req, res) => {
     try {
-      postServices.unSaved(req.user._id, req.params.id);
+      const save = await postServices.unSaved(req.user._id, req.params.id);
+
+      if (!save)
+        return res.status(400).json({ msg: "Người dùng không tồn tại." });
+
       res.json({ msg: "Bỏ lưu bài viết thành công!" });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -222,12 +184,11 @@ export const postController = {
       const page = req.query.page * 1 || 1;
       const skip = (page - 1) * DEFAULT_LIMIT_POST;
 
-      const savePosts = await Posts.find({
-        _id: { $in: req.user.saved },
-      })
-        .skip(skip)
-        .limit(DEFAULT_LIMIT_POST)
-        .sort("-createdAt");
+      const savePosts = await postServices.savedPosts(
+        req.user.saved,
+        skip,
+        DEFAULT_LIMIT_POST
+      );
 
       res.json({
         savePosts,

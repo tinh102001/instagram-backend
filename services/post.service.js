@@ -13,7 +13,7 @@ export const postServices = {
     return newPost;
   },
   update: async (content, images, postId) => {
-    await Posts.findOneAndUpdate(
+    const updatePost = await Posts.findOneAndUpdate(
       { _id: postId },
       {
         content: content,
@@ -22,6 +22,7 @@ export const postServices = {
     )
       .populate("user")
       .populate("comments");
+    return updatePost;
   },
   delete: async (postId, userId) => {
     const deletePost = await Posts.findOneAndDelete({
@@ -31,49 +32,109 @@ export const postServices = {
     await Comments.deleteMany({ _id: { $in: post.comments } });
     return deletePost;
   },
-  posts: async () => {},
-  post: async () => {},
-  userPosts: async () => {},
-  explorePosts: async () => {},
-  like: async () => {},
-  unlike: async () => {},
-  saved: async (userId, idSavedPost) => {
-    try {
-      const user = await Users.find({
-        _id: userId,
-        saved: idSavedPost,
-      });
-      if (user.length > 0)
-        return res.status(400).json({ msg: "Bạn đã lưu bài viết." });
-
-      const save = await Users.findOneAndUpdate(
-        { _id: userId },
-        {
-          $push: { saved: idSavedPost },
+  posts: async (userFollowing, userId, skip, limit) => {
+    const posts = await Posts.find({
+      user: [...userFollowing, userId],
+    })
+      .skip(skip)
+      .limit(limit)
+      .sort("-updatedAt")
+      .populate("user likes", "avatar username fullname followers")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "user likes",
+          select: "-password",
         },
-        { new: true }
-      );
-      if (!save)
-        return res.status(400).json({ msg: "Người dùng không tồn tại." });
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
+      });
+    return posts;
+  },
+  post: async (postId) => {
+    const post = await Posts.findById(postId)
+      .populate("user likes", "avatar username fullname followers")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "user likes",
+          select: "-password",
+        },
+      });
+    return post;
+  },
+  userPosts: async (userId, skip, limit) => {
+    const posts = await Posts.find({ user: userId })
+      .skip(skip)
+      .limit(limit)
+      .sort("-createdAt");
+    return posts;
+  },
+  explorePosts: async (newPosts, num) => {
+    const posts = await Posts.aggregate([
+      { $match: { user: { $nin: newPosts } } },
+      { $sample: { size: Number(num) } },
+    ]);
+    return posts;
+  },
+  like: async (postId, userId) => {
+    const post = await Posts.find({
+      _id: postId,
+      likes: userId,
+    });
+    if (post.length > 0) return [post];
+
+    const like = await Posts.findOneAndUpdate(
+      { _id: postId },
+      {
+        $push: { likes: userId },
+      },
+      { new: true }
+    );
+    return [post, like];
+  },
+  unlike: async (postId, userId) => {
+    const like = await Posts.findOneAndUpdate(
+      { _id: postId },
+      {
+        $pull: { likes: userId },
+      },
+      { new: true }
+    );
+    return like;
+  },
+  saved: async (userId, idSavedPost) => {
+    const user = await Users.find({
+      _id: userId,
+      saved: idSavedPost,
+    });
+    if (user.length > 0) {
+      return [user];
     }
+    const save = await Users.findOneAndUpdate(
+      { _id: userId },
+      {
+        $push: { saved: idSavedPost },
+      },
+      { new: true }
+    );
+    return [user, save];
   },
   unSaved: async (userId, idSavedPost) => {
-    try {
-      const save = await Users.findOneAndUpdate(
-        { _id: userId },
-        {
-          $pull: { saved: idSavedPost },
-        },
-        { new: true }
-      );
-
-      if (!save)
-        return res.status(400).json({ msg: "Người dùng không tồn tại." });
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
+    const save = await Users.findOneAndUpdate(
+      { _id: userId },
+      {
+        $pull: { saved: idSavedPost },
+      },
+      { new: true }
+    );
+    return save;
   },
-  savedPosts: async () => {},
+  savedPosts: async (userSavedPost, skip, limit) => {
+    const savePosts = await Posts.find({
+      _id: { $in: userSavedPost },
+    })
+      .skip(skip)
+      .limit(limit)
+      .sort("-createdAt");
+    return savePosts;
+  },
 };

@@ -1,17 +1,16 @@
-import { Users } from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { authServices } from "../services/auth.service.js";
 
 export const authController = {
   register: async (req, res) => {
     try {
       const { fullname, username, email, password, gender } = req.body;
-
-      const userName = await Users.findOne({ username });
+      const userName = await authServices.checkUsername(username);
       if (userName)
         return res.status(400).json({ msg: "Tên người dùng đã tồn tại." });
 
-      const userEmail = await Users.findOne({ email });
+      const userEmail = await authServices.checkEmail(email);
       if (userEmail)
         return res.status(400).json({ msg: "Email này đã tồn tại." });
 
@@ -21,14 +20,13 @@ export const authController = {
           .json({ msg: "Mật khẩu phải có ít nhất 6 kí tự." });
 
       const passwordHash = await bcrypt.hash(password, 12);
-
-      const newUser = new Users({
+      const newUser = await authServices.register(
         fullname,
         username,
         email,
-        password: passwordHash,
-        gender,
-      });
+        passwordHash,
+        gender
+      );
 
       const accessToken = createAccessToken({ id: newUser._id });
       const refreshToken = createRefreshToken({ id: newUser._id });
@@ -38,8 +36,6 @@ export const authController = {
         path: "/api/refresh_token",
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30days
       });
-
-      await newUser.save();
 
       res.json({
         msg: "Đăng kí thành công!",
@@ -57,10 +53,7 @@ export const authController = {
     try {
       const { email, password } = req.body;
 
-      const user = await Users.findOne({ email }).populate(
-        "followers following",
-        "avatar username fullname followers following"
-      );
+      const user = await authServices.checkEmail(email);
       if (!user)
         return res.status(400).json({ msg: "Email này không tồn tại." });
 
@@ -109,15 +102,9 @@ export const authController = {
         async (err, result) => {
           if (err) return res.status(400).json({ msg: "Xin hãy đăng nhập." });
 
-          const user = await Users.findById(result.id)
-            .select("-password")
-            .populate(
-              "followers following",
-              "avatar username fullname followers following"
-            );
-
+          const user = await authServices.generate(result.id);
           if (!user)
-            return res.status(400).json({ msg: "This does not exist." });
+            return res.status(400).json({ msg: "Người dùng không tồn tại." });
 
           const accessToken = createAccessToken({ id: result.id });
 
