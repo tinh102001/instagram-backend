@@ -2,7 +2,7 @@ import { Users } from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-export const authCtrl = {
+export const authController = {
   register: async (req, res) => {
     try {
       const { fullname, username, email, password, gender } = req.body;
@@ -57,8 +57,10 @@ export const authCtrl = {
     try {
       const { email, password } = req.body;
 
-      const user = await Users.findOne({ email });
-
+      const user = await Users.findOne({ email }).populate(
+        "followers following",
+        "avatar username fullname followers following"
+      );
       if (!user)
         return res.status(400).json({ msg: "Email này không tồn tại." });
 
@@ -107,7 +109,12 @@ export const authCtrl = {
         async (err, result) => {
           if (err) return res.status(400).json({ msg: "Xin hãy đăng nhập." });
 
-          const user = await Users.findById(result.id).select("-password");
+          const user = await Users.findById(result.id)
+            .select("-password")
+            .populate(
+              "followers following",
+              "avatar username fullname followers following"
+            );
 
           if (!user)
             return res.status(400).json({ msg: "This does not exist." });

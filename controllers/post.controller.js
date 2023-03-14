@@ -2,22 +2,19 @@ import { Posts } from "../models/post.model.js";
 import { Users } from "../models/user.model.js";
 import { Comments } from "../models/comment.model.js";
 
+import { postServices } from "../services/post.service.js";
+
 const DEFAULT_LIMIT_POST = 6;
 
-export const postCtrl = {
-  createPost: async (req, res) => {
+export const postController = {
+  createPost: (req, res) => {
     try {
       const { content, images } = req.body;
 
       if (images.length === 0)
         return res.status(400).json({ msg: "Hãy thêm ảnh kèm theo." });
 
-      const newPost = new Posts({
-        content,
-        images,
-        user: req.user._id,
-      });
-      await newPost.save();
+      const newPost = postServices.create(content, images, req.user._id);
 
       res.json({
         msg: "Đã tạo bài viết",
@@ -30,19 +27,20 @@ export const postCtrl = {
       return res.status(500).json({ msg: err.message });
     }
   },
-  updatePost: async (req, res) => {
+  updatePost: (req, res) => {
     try {
       const { content, images } = req.body;
 
-      const updatePost = await Posts.findOneAndUpdate(
-        { _id: req.params.id },
-        {
-          content,
-          images,
-        }
-      )
-        .populate("user")
-        .populate("comments");
+      // const updatePost = await Posts.findOneAndUpdate(
+      //   { _id: req.params.id },
+      //   {
+      //     content,
+      //     images,
+      //   }
+      // )
+      //   .populate("user")
+      //   .populate("comments");
+      const updatePost = postServices.update(content, images, req.params.id);
 
       res.json({
         msg: "Đã cập nhật bài viết",
@@ -56,14 +54,14 @@ export const postCtrl = {
       return res.status(500).json({ msg: err.message });
     }
   },
-  deletePost: async (req, res) => {
+  deletePost: (req, res) => {
     try {
-      const deletePost = await Posts.findOneAndDelete({
-        _id: req.params.id,
-        user: req.user._id,
-      });
-      await Comments.deleteMany({ _id: { $in: post.comments } });
-
+      // const deletePost = await Posts.findOneAndDelete({
+      //   _id: req.params.id,
+      //   user: req.user._id,
+      // });
+      // await Comments.deleteMany({ _id: { $in: post.comments } });
+      const deletePost = postServices.delete(req.params.id, req.user._id);
       res.json({
         msg: "Đã xoá bài viết",
         deletePost: {
@@ -104,7 +102,7 @@ export const postCtrl = {
     try {
       const page = req.query.page * 1 || 1;
       const skip = (page - 1) * DEFAULT_LIMIT_POST;
-      
+
       const posts = await Posts.find({ user: req.params.id })
         .skip(skip)
         .limit(DEFAULT_LIMIT_POST)
@@ -140,7 +138,7 @@ export const postCtrl = {
       return res.status(500).json({ msg: err.message });
     }
   },
-  getPostsDicover: async (req, res) => {
+  getExplorePosts: async (req, res) => {
     try {
       const newArr = [...req.user.following, req.user._id];
 
@@ -203,7 +201,40 @@ export const postCtrl = {
       return res.status(500).json({ msg: err.message });
     }
   },
-  savePost: async (req, res) => {},
-  unSavePost: async (req, res) => {},
-  getSavePosts: async (req, res) => {},
+  savePost: (req, res) => {
+    try {
+      postServices.saved(req.user._id, req.params.id);
+      res.json({ msg: "Lưu bài viết thành công!" });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  unSavePost: async (req, res) => {
+    try {
+      postServices.unSaved(req.user._id, req.params.id);
+      res.json({ msg: "Bỏ lưu bài viết thành công!" });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  getSavePosts: async (req, res) => {
+    try {
+      const page = req.query.page * 1 || 1;
+      const skip = (page - 1) * DEFAULT_LIMIT_POST;
+
+      const savePosts = await Posts.find({
+        _id: { $in: req.user.saved },
+      })
+        .skip(skip)
+        .limit(DEFAULT_LIMIT_POST)
+        .sort("-createdAt");
+
+      res.json({
+        savePosts,
+        result: savePosts.length,
+      });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
 };

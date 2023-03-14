@@ -1,19 +1,20 @@
 import express from "express";
 
-import { userCtrl } from "../controllers/user.controller.js";
+import { userController } from "../controllers/user.controller.js";
 import { auth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get("/search", auth, userCtrl.searchUser);
+router.get("/search", auth, userController.searchUser);
 
-router.get("/user/:id", auth, userCtrl.getUser);
+router.get("/user/:id", auth, userController.getUser);
 
-router.patch("/user", auth, userCtrl.updateUser);
+router.patch("/user", auth, userController.updateUser);
 
-router.patch("/user/:id/follow", auth, userCtrl.follow);
-router.patch("/user/:id/unfollow", auth, userCtrl.unfollow);
+router.patch("/user/:id/follow", auth, userController.follow);
 
-router.get("/suggestionsUser", auth, userCtrl.suggestionsUser);
+router.patch("/user/:id/unfollow", auth, userController.unfollow);
+
+router.get("/suggestions_users", auth, userController.suggestionsUser);
 
 export default router;

@@ -1,18 +1,18 @@
 import express from "express";
 
-import { notifyCtrl } from "../controllers/notify.controller.js";
+import { notifyController } from "../controllers/notify.controller.js";
 import { auth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/notify", auth, notifyCtrl.createNotify);
+router.post("/notify", auth, notifyController.createNotify);
 
-router.delete("/notify/:id", auth, notifyCtrl.removeNotify);
+router.get("/notifies", auth, notifyController.getNotifies);
 
-router.get("/notifies", auth, notifyCtrl.getNotifies);
+router.delete("/notify/:id", auth, notifyController.removeNotify);
 
-router.patch("/isReadNotify/:id", auth, notifyCtrl.isReadNotify);
+router.delete("/delete_all_notifies", auth, notifyController.deleteAllNotifies);
 
-router.delete("/deleteAllNotify", auth, notifyCtrl.deleteAllNotifies);
+router.patch("/is_read_notify/:id", auth, notifyController.isReadNotify);
 
 export default router;

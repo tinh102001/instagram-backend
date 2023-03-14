@@ -1,6 +1,6 @@
 import { Notifies } from "../models/notify.model.js";
 
-export const notifyCtrl = {
+export const notifyController = {
   createNotify: async (req, res) => {
     try {
       const { id, recipients, url, text, content, image } = req.body;
@@ -46,6 +46,15 @@ export const notifyCtrl = {
       return res.status(500).json({ msg: err.message });
     }
   },
+  deleteAllNotifies: async (req, res) => {
+    try {
+      const notifies = await Notifies.deleteMany({ recipients: req.user._id });
+
+      return res.json({ notifies });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
   isReadNotify: async (req, res) => {
     try {
       const notifies = await Notifies.findOneAndUpdate(
@@ -54,15 +63,6 @@ export const notifyCtrl = {
           isRead: true,
         }
       );
-
-      return res.json({ notifies });
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
-  },
-  deleteAllNotifies: async (req, res) => {
-    try {
-      const notifies = await Notifies.deleteMany({ recipients: req.user._id });
 
       return res.json({ notifies });
     } catch (err) {

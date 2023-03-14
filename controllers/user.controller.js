@@ -1,6 +1,6 @@
 import { Users } from "../models/user.model.js";
 
-export const userCtrl = {
+export const userController = {
   searchUser: async (req, res) => {
     try {
       const users = await Users.find({
@@ -16,7 +16,9 @@ export const userCtrl = {
   },
   getUser: async (req, res) => {
     try {
-      const user = await Users.findById(req.params.id).select("-password");
+      const user = await Users.findById(req.params.id)
+        .select("-password")
+        .populate("followers following", "-password");
 
       if (!user)
         return res.status(400).json({ msg: "Người dùng không tồn tại." });

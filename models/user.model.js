@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema(
     website: { type: String, default: "" },
     followers: [{ type: mongoose.Types.ObjectId, ref: "Users" }],
     following: [{ type: mongoose.Types.ObjectId, ref: "Users" }],
-    saved: [{ type: mongoose.Types.ObjectId, ref: "Users" }],
+    saved: [{ type: mongoose.Types.ObjectId, ref: "Posts" }],
   },
   {
     timestamps: true,

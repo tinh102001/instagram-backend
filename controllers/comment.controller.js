@@ -1,87 +1,106 @@
 import { Posts } from "../models/post.model.js";
 import { Comments } from "../models/comment.model.js";
 
-export const commentCtrl = {
+export const commentController = {
   createComment: async (req, res) => {
     try {
-      const { postId, content, tag, reply, postUserId } = req.body
+      const { postId, content, tag, reply, postUserId } = req.body;
 
       const newComment = new Comments({
-          user: req.user._id, content, tag, reply, postUserId, postId
-      })
+        user: req.user._id,
+        content,
+        tag,
+        reply,
+        postUserId,
+        postId,
+      });
 
-      await Posts.findOneAndUpdate({_id: postId}, {
-          $push: {comments: newComment._id}
-      }, {new: true})
+      await Posts.findOneAndUpdate(
+        { _id: postId },
+        {
+          $push: { comments: newComment._id },
+        },
+        { new: true }
+      );
 
-      await newComment.save()
+      await newComment.save();
 
-      res.json({newComment})
-
+      res.json({ newComment });
     } catch (err) {
-        return res.status(500).json({msg: err.message})
+      return res.status(500).json({ msg: err.message });
     }
   },
   updateComment: async (req, res) => {
     try {
-      const { content } = req.body
+      const { content } = req.body;
 
-      await Comments.findOneAndUpdate({
-          _id: req.params.id, user: req.user._id
-      }, {content})
+      await Comments.findOneAndUpdate(
+        {
+          _id: req.params.id,
+          user: req.user._id,
+        },
+        { content }
+      );
 
-      res.json({msg: 'Đã sửa đổi bình luận'})
-
+      res.json({ msg: "Đã sửa đổi bình luận" });
     } catch (err) {
-        return res.status(500).json({msg: err.message})
-    }
-  },
-  likeComment: async (req, res) => {
-    try {
-      const comment = await Comments.find({_id: req.params.id, likes: req.user._id})
-      if(comment.length > 0) return res.status(400).json({msg: "Bạn đã thích bình luận này rồi"})
-
-      await Comments.findOneAndUpdate({_id: req.params.id}, {
-          $push: {likes: req.user._id}
-      }, {new: true})
-
-      res.json({msg: 'Đã thích bình luận'})
-
-    } catch (err) {
-        return res.status(500).json({msg: err.message})
-    }
-  },
-  unLikeComment: async (req, res) => {
-    try {
-
-      await Comments.findOneAndUpdate({_id: req.params.id}, {
-          $pull: {likes: req.user._id}
-      }, {new: true})
-
-      res.json({msg: 'Đã bỏ thích bình luận'})
-
-    } catch (err) {
-        return res.status(500).json({msg: err.message})
+      return res.status(500).json({ msg: err.message });
     }
   },
   deleteComment: async (req, res) => {
     try {
       const comment = await Comments.findOneAndDelete({
-          _id: req.params.id,
-          $or: [
-              {user: req.user._id},
-              {postUserId: req.user._id}
-          ]
-      })
+        _id: req.params.id,
+        $or: [{ user: req.user._id }, { postUserId: req.user._id }],
+      });
 
-      await Posts.findOneAndUpdate({_id: comment.postId}, {
-          $pull: {comments: req.params.id}
-      })
+      await Posts.findOneAndUpdate(
+        { _id: comment.postId },
+        {
+          $pull: { comments: req.params.id },
+        }
+      );
 
-      res.json({msg: 'Đã xoá bình luận'})
-
+      res.json({ msg: "Đã xoá bình luận" });
     } catch (err) {
-        return res.status(500).json({msg: err.message})
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  likeComment: async (req, res) => {
+    try {
+      const comment = await Comments.find({
+        _id: req.params.id,
+        likes: req.user._id,
+      });
+      if (comment.length > 0)
+        return res.status(400).json({ msg: "Bạn đã thích bình luận này rồi" });
+
+      await Comments.findOneAndUpdate(
+        { _id: req.params.id },
+        {
+          $push: { likes: req.user._id },
+        },
+        { new: true }
+      );
+
+      res.json({ msg: "Đã thích bình luận" });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  unLikeComment: async (req, res) => {
+    try {
+      await Comments.findOneAndUpdate(
+        { _id: req.params.id },
+        {
+          $pull: { likes: req.user._id },
+        },
+        { new: true }
+      );
+
+      res.json({ msg: "Đã bỏ thích bình luận" });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
     }
   },
 };

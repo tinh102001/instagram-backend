@@ -1,29 +1,29 @@
 import express from "express";
 
-import { postCtrl } from "../controllers/post.controller.js";
+import { postController } from "../controllers/post.controller.js";
 import { auth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/posts", auth, postCtrl.createPost);
-router.get("/posts", auth, postCtrl.getPosts);
+router.post("/posts", auth, postController.createPost);
+router.get("/posts", auth, postController.getPosts);
 
-router.patch("/post/:id", auth, postCtrl.updatePost);
-router.get("/post/:id", auth, postCtrl.getPost);
-router.delete("/post/:id", auth, postCtrl.deletePost);
+router.patch("/post/:id", auth, postController.updatePost);
+router.get("/post/:id", auth, postController.getPost);
+router.delete("/post/:id", auth, postController.deletePost);
 
-router.patch("/post/:id/like", auth, postCtrl.likePost);
+router.patch("/post/:id/like", auth, postController.likePost);
 
-router.patch("/post/:id/unlike", auth, postCtrl.unLikePost);
+router.patch("/post/:id/unlike", auth, postController.unLikePost);
 
-router.get("/user_posts/:id", auth, postCtrl.getUserPosts);
+router.get("/user_posts/:id", auth, postController.getUserPosts);
 
-router.get("/post_discover", auth, postCtrl.getPostsDicover);
+router.get("/explore_posts", auth, postController.getExplorePosts);
 
-router.patch("/savePost/:id", auth, postCtrl.savePost);
+router.patch("/save_post/:id", auth, postController.savePost);
 
-router.patch("/unSavePost/:id", auth, postCtrl.unSavePost);
+router.patch("/unsave_post/:id", auth, postController.unSavePost);
 
-router.get("/getSavePosts", auth, postCtrl.getSavePosts);
+router.get("/get_save_posts", auth, postController.getSavePosts);
 
 export default router;
