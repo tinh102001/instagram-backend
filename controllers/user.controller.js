@@ -1,4 +1,3 @@
-import { Users } from "../models/user.model.js";
 import { userServices } from "../services/user.service.js";
 
 export const userController = {

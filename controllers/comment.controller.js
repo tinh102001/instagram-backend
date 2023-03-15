@@ -1,5 +1,3 @@
-import { Posts } from "../models/post.model.js";
-import { Comments } from "../models/comment.model.js";
 import { commentServices } from "../services/comment.service.js";
 
 export const commentController = {

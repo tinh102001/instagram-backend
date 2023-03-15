@@ -1,4 +1,3 @@
-import { Notifies } from "../models/notify.model.js";
 import { notifyServices } from "../services/notify.service.js";
 
 export const notifyController = {

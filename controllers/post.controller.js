@@ -62,15 +62,21 @@ export const postController = {
   getPosts: async (req, res) => {
     try {
       const page = req.query.page * 1 || 1;
-      const skip = (page - 1) * DEFAULT_LIMIT_POST;
+      const limit = req.query.limit * 1 || 6;
+      const skip = (page - 1) * limit;
 
       const posts = await postServices.posts(
         req.user.following,
         req.user._id,
         skip,
-        DEFAULT_LIMIT_POST
+        limit
       );
-      return res.json({ posts });
+
+      res.json({
+        msg: "Success!",
+        result: posts.length,
+        posts,
+      });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
