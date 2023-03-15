@@ -1,4 +1,5 @@
 import { Notifies } from "../models/notify.model.js";
+import { notifyServices } from "../services/notify.service.js";
 
 export const notifyController = {
   createNotify: async (req, res) => {
@@ -7,17 +8,8 @@ export const notifyController = {
 
       if (recipients.includes(req.user._id.toString())) return;
 
-      const notify = new Notifies({
-        id,
-        recipients,
-        url,
-        text,
-        content,
-        image,
-        user: req.user._id,
-      });
+      const notify = await notifyServices.create(id, recipients, url, text, content, image, req.user._id)
 
-      await notify.save();
       return res.json({ notify });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -25,9 +17,7 @@ export const notifyController = {
   },
   getNotifies: async (req, res) => {
     try {
-      const notifies = await Notifies.find({ recipients: req.user._id })
-        .sort("-createdAt")
-        .populate("user", "avatar username");
+      const notifies = await notifyServices.get(req.user._id)
 
       return res.json({ notifies });
     } catch (err) {
@@ -36,10 +26,8 @@ export const notifyController = {
   },
   removeNotify: async (req, res) => {
     try {
-      const notify = await Notifies.findOneAndDelete({
-        id: req.params.id,
-        url: req.query.url,
-      });
+      console.log(req)
+      const notify = await notifyServices.remove(req.params.id, req.query.url)
 
       return res.json({ notify });
     } catch (err) {
@@ -48,7 +36,7 @@ export const notifyController = {
   },
   deleteAllNotifies: async (req, res) => {
     try {
-      const notifies = await Notifies.deleteMany({ recipients: req.user._id });
+      const notifies = await notifyServices.deleteAll(req.user._id) 
 
       return res.json({ notifies });
     } catch (err) {
@@ -57,12 +45,7 @@ export const notifyController = {
   },
   isReadNotify: async (req, res) => {
     try {
-      const notifies = await Notifies.findOneAndUpdate(
-        { _id: req.params.id },
-        {
-          isRead: true,
-        }
-      );
+      const notifies = await notifyServices.isRead(req.params.id) 
 
       return res.json({ notifies });
     } catch (err) {
