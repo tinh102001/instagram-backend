@@ -25,7 +25,6 @@ export const notifyController = {
   },
   removeNotify: async (req, res) => {
     try {
-      console.log(req)
       const notify = await notifyServices.remove(req.params.id, req.query.url)
 
       return res.json({ notify });

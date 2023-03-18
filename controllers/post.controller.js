@@ -1,3 +1,4 @@
+import { Posts } from "../models/post.model.js";
 import { postServices } from "../services/post.service.js";
 
 const DEFAULT_LIMIT_POST = 6;
@@ -72,10 +73,16 @@ export const postController = {
         limit
       );
 
+      const totalPosts = await postServices.getTotalPosts(
+        req.user.following,
+        req.user._id
+      )
+
       res.json({
         msg: "Success!",
         result: posts.length,
         posts,
+        totalPosts,
       });
     } catch (err) {
       return res.status(500).json({ msg: err.message });

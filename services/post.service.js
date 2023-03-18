@@ -137,4 +137,10 @@ export const postServices = {
       .sort("-createdAt");
     return savePosts;
   },
+  getTotalPosts: async (userFollowing, userId) => {
+    const totalPosts = await Posts.find({
+      user: [...userFollowing, userId],
+    }).count();
+    return totalPosts;
+  }
 };
