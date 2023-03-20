@@ -51,5 +51,19 @@ export const userController = {
       return res.status(500).json({ msg: err.message });
     }
   },
-  suggestionsUser: async (req, res) => {},
+  suggestionsUser: async (req, res) => {
+    try {
+      const num  = req.query.num || 10
+
+      const users = await userServices.suggestions(req.user, num)
+
+      return res.json({
+          users,
+          result: users.length
+      })
+
+  } catch (err) {
+      return res.status(500).json({msg: err.message})
+  }
+  },
 };

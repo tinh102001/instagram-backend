@@ -73,5 +73,16 @@ export const userServices = {
       { new: true }
     );
   },
-  suggestions: async () => {},
+  suggestions: async (user, num) => {
+    const newArr = [...user.following, user._id]
+
+      const users = await Users.aggregate([
+          { $match: { _id: { $nin: newArr } } },
+          { $sample: { size: Number(num) } },
+          { $lookup: { from: 'users', localField: 'followers', foreignField: '_id', as: 'followers' } },
+          { $lookup: { from: 'users', localField: 'following', foreignField: '_id', as: 'following' } },
+      ]).project("-password")
+
+      return users
+  },
 };
