@@ -1,7 +1,7 @@
 import { Posts } from "../models/post.model.js";
 import { Users } from "../models/user.model.js";
 import { Comments } from "../models/comment.model.js";
-import  cloudinaryProvider  from "../utils/cloudinary.js";
+import cloudinaryProvider from "../utils/cloudinary.js";
 
 export const postServices = {
   create: async (content, images, userId) => {
@@ -33,8 +33,8 @@ export const postServices = {
     deletePost.images.forEach((img) => {
       const imgId = img.public_id;
       cloudinaryProvider.uploader.destroy(imgId);
-    })
-     
+    });
+
     await Comments.deleteMany({ _id: { $in: deletePost.comments } });
     return deletePost;
   },
@@ -148,5 +148,5 @@ export const postServices = {
       user: [...userFollowing, userId],
     }).count();
     return totalPosts;
-  }
+  },
 };

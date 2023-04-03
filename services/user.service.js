@@ -15,7 +15,16 @@ export const userServices = {
       .populate("followers following", "-password");
     return user;
   },
-  update: async (id, avatar, fullname, mobile, address, story, website, gender) => {
+  update: async (
+    id,
+    avatar,
+    fullname,
+    mobile,
+    address,
+    story,
+    website,
+    gender
+  ) => {
     await Users.findOneAndUpdate(
       { _id: id },
       {
@@ -28,7 +37,7 @@ export const userServices = {
         gender,
       }
     );
-    const user = await Users.findById(id)
+    const user = await Users.findById(id);
     return user;
   },
   follow: async (id, userId) => {
@@ -36,8 +45,7 @@ export const userServices = {
       _id: id,
       followers: userId,
     });
-    if (user.length > 0)
-      return [user]
+    if (user.length > 0) return [user];
 
     const newUser = await Users.findOneAndUpdate(
       { _id: id },
@@ -57,7 +65,7 @@ export const userServices = {
     return newUser;
   },
   unfollow: async (id, userId) => {
-    await Users.findOneAndUpdate(
+    const newUser = await Users.findOneAndUpdate(
       { _id: id },
       {
         $pull: { followers: userId },
@@ -72,17 +80,33 @@ export const userServices = {
       },
       { new: true }
     );
+
+    return newUser;
   },
   suggestions: async (user, num) => {
-    const newArr = [...user.following, user._id]
+    const newArr = [...user.following, user._id];
 
-      const users = await Users.aggregate([
-          { $match: { _id: { $nin: newArr } } },
-          { $sample: { size: Number(num) } },
-          { $lookup: { from: 'users', localField: 'followers', foreignField: '_id', as: 'followers' } },
-          { $lookup: { from: 'users', localField: 'following', foreignField: '_id', as: 'following' } },
-      ]).project("-password")
+    const users = await Users.aggregate([
+      { $match: { _id: { $nin: newArr } } },
+      { $sample: { size: Number(num) } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "followers",
+          foreignField: "_id",
+          as: "followers",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "following",
+          foreignField: "_id",
+          as: "following",
+        },
+      },
+    ]).project("-password");
 
-      return users
+    return users;
   },
 };

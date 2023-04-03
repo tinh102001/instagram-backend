@@ -52,8 +52,7 @@ export const commentServices = {
       _id: commentId,
       likes: userId,
     });
-    if (comment.length > 0)
-      return [comment]
+    if (comment.length > 0) return [comment];
 
     await Comments.findOneAndUpdate(
       { _id: commentId },

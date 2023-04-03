@@ -5,7 +5,14 @@ export const commentController = {
     try {
       const { postId, content, tag, reply, postUserId } = req.body;
 
-      const newComment = await commentServices.create(req.user._id, postId, content, tag, reply, postUserId)
+      const newComment = await commentServices.create(
+        req.user._id,
+        postId,
+        content,
+        tag,
+        reply,
+        postUserId
+      );
 
       res.json({ newComment });
     } catch (err) {
@@ -16,7 +23,11 @@ export const commentController = {
     try {
       const { content } = req.body;
 
-      const updateComment = await commentServices.update(req.params.id, req.user._id, content)
+      const updateComment = await commentServices.update(
+        req.params.id,
+        req.user._id,
+        content
+      );
 
       res.json({ msg: "Đã sửa đổi bình luận", comment: updateComment });
     } catch (err) {
@@ -25,7 +36,7 @@ export const commentController = {
   },
   deleteComment: async (req, res) => {
     try {
-      const comment = await commentServices.delete(req.params.id, req.user._id)
+      const comment = await commentServices.delete(req.params.id, req.user._id);
 
       res.json({ msg: "Đã xoá bình luận", comment: comment });
     } catch (err) {
@@ -34,7 +45,11 @@ export const commentController = {
   },
   likeComment: async (req, res) => {
     try {
-      const comment = await commentServices.like(req.params.id, req.user._id, res)
+      const comment = await commentServices.like(
+        req.params.id,
+        req.user._id,
+        res
+      );
 
       res.json({ msg: "Đã thích bình luận", comment: comment });
     } catch (err) {
@@ -43,7 +58,7 @@ export const commentController = {
   },
   unLikeComment: async (req, res) => {
     try {
-      const comment = await commentServices.unlike(req.params.id, req.user._id)
+      const comment = await commentServices.unlike(req.params.id, req.user._id);
 
       res.json({ msg: "Đã bỏ thích bình luận", comment: comment });
     } catch (err) {

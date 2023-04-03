@@ -3,12 +3,15 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 import auth from "./routes/auth.router.js";
 import user from "./routes/user.router.js";
 import post from "./routes/post.router.js";
 import comment from "./routes/comment.router.js";
 import notify from "./routes/notify.router.js";
+import SocketServer from "./SocketServer.js";
 
 dotenv.config();
 
@@ -28,12 +31,20 @@ app.use("/api", post);
 app.use("/api", comment);
 app.use("/api", notify);
 
+// Socket
+const httpServer = createServer(app);
+const io = new Server(httpServer, { cors: { origin: "*" } });
+
+io.on("connection", (socket) => {
+  SocketServer(socket);
+});
+
 mongoose.set("strictQuery", false);
 mongoose
   .connect(URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log("Connected to DB");
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   })

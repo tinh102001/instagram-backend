@@ -17,9 +17,9 @@ export const notifyServices = {
   },
   get: async (userId) => {
     const notifies = await Notifies.find({ recipients: userId })
-        .sort("-createdAt")
-        .populate("user", "avatar username");
-    return notifies
+      .sort("-createdAt")
+      .populate("user", "avatar username");
+    return notifies;
   },
   remove: async (id, url) => {
     const notify = await Notifies.findOneAndDelete({

@@ -76,7 +76,7 @@ export const postController = {
       const totalPosts = await postServices.getTotalPosts(
         req.user.following,
         req.user._id
-      )
+      );
 
       res.json({
         msg: "Success!",
