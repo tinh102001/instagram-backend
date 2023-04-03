@@ -3,9 +3,9 @@ import cloudinary from 'cloudinary';
 const cloudinaryProvider = cloudinary.v2;
 
 cloudinaryProvider.config({ 
-    cloud_name: 'dnfwvyqim', 
-    api_key: '859993296383842', 
-    api_secret: 'Wm6jTpCtiOuVUncssJQaW0lGyAk' 
+    cloud_name: 'dtdb3rtw7', 
+    api_key: '323282161395195', 
+    api_secret: 'ay9HUBZv2klyqzByfVwdm-L_gMc' 
   });
 
 export default cloudinaryProvider;
