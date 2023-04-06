@@ -31,8 +31,10 @@ export const postServices = {
       user: userId,
     });
     deletePost.images.forEach((img) => {
-      const imgId = img.public_id;
-      cloudinaryProvider.uploader.destroy(imgId);
+      if(img.url.includes("image"))
+        cloudinaryProvider.uploader.destroy(img.public_id);
+      else 
+        cloudinaryProvider.uploader.destroy(img.public_id, { resource_type: "video" });
     });
 
     await Comments.deleteMany({ _id: { $in: deletePost.comments } });
