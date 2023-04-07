@@ -11,6 +11,7 @@ import user from "./routes/user.router.js";
 import post from "./routes/post.router.js";
 import comment from "./routes/comment.router.js";
 import notify from "./routes/notify.router.js";
+import message from "./routes/message.router.js";
 import SocketServer from "./SocketServer.js";
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.use("/api", user);
 app.use("/api", post);
 app.use("/api", comment);
 app.use("/api", notify);
+app.use("/api", message);
 
 // Socket
 const httpServer = createServer(app);
