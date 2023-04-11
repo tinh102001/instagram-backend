@@ -98,9 +98,14 @@ export const postController = {
         skip,
         DEFAULT_LIMIT_POST
       );
+
+      const totalUserPosts = await postServices.getTotalUserPosts(
+        req.user._id
+      );
       res.json({
         posts,
         result: posts.length,
+        totalUserPosts
       });
     } catch (err) {
       return res.status(500).json({ msg: err.message });

@@ -151,4 +151,10 @@ export const postServices = {
     }).count();
     return totalPosts;
   },
+  getTotalUserPosts: async (userId) => {
+    const totalUserPosts = await Posts.find({
+      user: [userId],
+    }).count();
+    return totalUserPosts;
+  },
 };
