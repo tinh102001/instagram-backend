@@ -157,4 +157,10 @@ export const postServices = {
     }).count();
     return totalUserPosts;
   },
+  getTotalSavedPosts: async (userSavedPost) => {
+    const totalSavedPosts = await Posts.find({
+      _id: { $in: userSavedPost },
+    }).count();
+    return totalSavedPosts;
+  },
 };

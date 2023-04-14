@@ -1,7 +1,7 @@
 import { Posts } from "../models/post.model.js";
 import { postServices } from "../services/post.service.js";
 
-const DEFAULT_LIMIT_POST = 6;
+const DEFAULT_LIMIT_POST = 9;
 
 export const postController = {
   createPost: async (req, res) => {
@@ -63,7 +63,7 @@ export const postController = {
   getPosts: async (req, res) => {
     try {
       const page = req.query.page * 1 || 1;
-      const limit = req.query.limit * 1 || 6;
+      const limit = req.query.limit * 1 || DEFAULT_LIMIT_POST;
       const skip = (page - 1) * limit;
 
       const posts = await postServices.posts(
@@ -91,21 +91,16 @@ export const postController = {
   getUserPosts: async (req, res) => {
     try {
       const page = req.query.page * 1 || 1;
-      const skip = (page - 1) * DEFAULT_LIMIT_POST;
+      const limit = req.query.limit * 1 || DEFAULT_LIMIT_POST;
+      const skip = (page - 1) * limit;
 
-      const posts = await postServices.userPosts(
-        req.params.id,
-        skip,
-        DEFAULT_LIMIT_POST
-      );
+      const posts = await postServices.userPosts(req.params.id, skip, limit);
 
-      const totalUserPosts = await postServices.getTotalUserPosts(
-        req.user._id
-      );
+      const totalUserPosts = await postServices.getTotalUserPosts(req.params.id);
       res.json({
         posts,
         result: posts.length,
-        totalUserPosts
+        totalUserPosts,
       });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -200,17 +195,21 @@ export const postController = {
   getSavePosts: async (req, res) => {
     try {
       const page = req.query.page * 1 || 1;
-      const skip = (page - 1) * DEFAULT_LIMIT_POST;
+      const limit = req.query.limit * 1 || DEFAULT_LIMIT_POST;
+      const skip = (page - 1) * limit;
 
       const savePosts = await postServices.savedPosts(
         req.user.saved,
         skip,
-        DEFAULT_LIMIT_POST
+        limit
       );
-
+      const totalSavedPosts = await postServices.getTotalSavedPosts(
+        req.user.saved
+      );
       res.json({
         savePosts,
         result: savePosts.length,
+        totalSavedPosts
       });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
