@@ -1,6 +1,6 @@
 import { Messages } from "../models/message.model.js";
 import { Conversations } from "../models/conversation.model.js";
-import cloudinaryProvider from "../utils/cloudinary.js";
+import { messageServices } from "../services/message.service.js";
 
 class APIfeatures {
   constructor(query, queryString) {
@@ -24,50 +24,24 @@ export const messageController = {
 
       if (!recipient || (!text.trim() && media.length === 0 && !call)) return;
 
-      const newConversation = await Conversations.findOneAndUpdate(
-        {
-          $or: [
-            { recipients: [sender, recipient] },
-            { recipients: [recipient, sender] },
-          ],
-        },
-        {
-          recipients: [sender, recipient],
-          text,
-          media,
-          call,
-        },
-        { new: true, upsert: true }
-      );
+      await messageServices.create(sender, recipient, text, media, call);
 
-      const newMessage = new Messages({
-        conversation: newConversation._id,
-        sender,
-        call,
-        recipient,
-        text,
-        media,
-      });
-
-      await newMessage.save();
-
-      res.json({ msg: "Create Success!" });
+      res.json({ msg: "Tạo tin nhắn thành công!" });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
   getConversations: async (req, res) => {
     try {
-      const features = new APIfeatures(
-        Conversations.find({
-          recipients: req.user._id,
-        }),
-        req.query
-      ).paginating();
+      const page = req.query.page * 1 || 1;
+      const limit = req.query.limit * 1 || 9;
+      const skip = (page - 1) * limit;
 
-      const conversations = await features.query
-        .sort("-updatedAt")
-        .populate("recipients", "avatar username fullname");
+      const conversations = await messageServices.getConversations(
+        req.user._id,
+        skip,
+        limit
+      );
 
       res.json({
         conversations,
@@ -79,17 +53,16 @@ export const messageController = {
   },
   getMessages: async (req, res) => {
     try {
-      const features = new APIfeatures(
-        Messages.find({
-          $or: [
-            { sender: req.user._id, recipient: req.params.id },
-            { sender: req.params.id, recipient: req.user._id },
-          ],
-        }),
-        req.query
-      ).paginating();
+      const page = req.query.page * 1 || 1;
+      const limit = req.query.limit * 1 || 9;
+      const skip = (page - 1) * limit;
 
-      const messages = await features.query.sort("-createdAt");
+      const messages = await messageServices.getMessages(
+        req.user._id,
+        req.params.id,
+        skip,
+        limit
+      );
 
       res.json({
         messages,
@@ -101,35 +74,18 @@ export const messageController = {
   },
   deleteMessages: async (req, res) => {
     try {
-      const message = await Messages.findOneAndDelete({
-        _id: req.params.id,
-        sender: req.user._id,
-      });
+      await messageServices.deleteMessages(req.params.id, req.user._id);
 
-      message.media.forEach((img) => {
-        if (img.url.includes("image"))
-          cloudinaryProvider.uploader.destroy(img.public_id);
-        else
-          cloudinaryProvider.uploader.destroy(img.public_id, {
-            resource_type: "video",
-          });
-      });
-      res.json({ msg: "Delete Success!" });
+      res.json({ msg: "Xóa tin nhắn thành công!" });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
   deleteConversation: async (req, res) => {
     try {
-      const newConver = await Conversations.findOneAndDelete({
-        $or: [
-          { recipients: [req.user._id, req.params.id] },
-          { recipients: [req.params.id, req.user._id] },
-        ],
-      });
-      await Messages.deleteMany({ conversation: newConver._id });
+      await messageServices.deleteConversation(req.user._id, req.params.id);
 
-      res.json({ msg: "Delete Success!" });
+      res.json({ msg: "Xóa hội thoại thành công!" });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
