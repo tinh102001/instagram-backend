@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { PeerServer } from "peer";
 
 import auth from "./routes/auth.router.js";
 import user from "./routes/user.router.js";
@@ -41,6 +42,7 @@ io.on("connection", (socket) => {
   SocketServer(socket);
 });
 
+PeerServer({ port: 3001, path: "/" });
 mongoose.set("strictQuery", false);
 mongoose
   .connect(URI, { useNewUrlParser: true, useUnifiedTopology: true })
